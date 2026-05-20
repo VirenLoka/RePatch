@@ -14,8 +14,17 @@ model_id_name=icici
 data_name=icici
 
 random_seed=2021
-for pred_len in 5 10 20 30
+pred_lens=(5 10 20 30)
+total_runs=${#pred_lens[@]}
+run_num=0
+
+for pred_len in "${pred_lens[@]}"
 do
+    run_num=$((run_num + 1))
+    echo "" >&2
+    echo "============================================" >&2
+    echo "  Run $run_num / $total_runs  |  pred_len = $pred_len" >&2
+    echo "============================================" >&2
     python3 -u run_longExp.py \
       --random_seed $random_seed \
       --is_training 1 \
@@ -42,4 +51,7 @@ do
       --train_epochs 100\
       --patience 20\
       --itr 1 --batch_size 16 --learning_rate 0.0001 >logs/LongForecasting/$model_name'_'$model_id_name'_'$seq_len'_'$pred_len.log
+    echo "  Done  ->  logs/LongForecasting/${model_name}_${model_id_name}_${seq_len}_${pred_len}.log" >&2
 done
+echo "" >&2
+echo "All $total_runs runs complete." >&2

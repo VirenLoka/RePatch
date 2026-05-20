@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 import torch
 from exp.exp_main import Exp_Main
 import random
@@ -114,7 +115,8 @@ if __name__ == '__main__':
     Exp = Exp_Main
 
     if args.is_training:
-        itr_bar = tqdm(range(args.itr), desc='Experiments', unit='run', colour='green')
+        itr_bar = tqdm(range(args.itr), desc='Experiments', unit='run', colour='green',
+                       file=sys.stderr, dynamic_ncols=True)
         for ii in itr_bar:
             setting = '{}_{}_{}_ft{}_sl{}_ll{}_pl{}_dm{}_nh{}_el{}_dl{}_df{}_fc{}_eb{}_dt{}_{}_{}'.format(
                 args.model_id,

@@ -11,11 +11,13 @@ from torch import optim
 from torch.optim import lr_scheduler 
 
 import os
+import sys
 import time
 
 import warnings
 import matplotlib.pyplot as plt
 import numpy as np
+from tqdm import tqdm
 
 warnings.filterwarnings('ignore')
 
@@ -55,7 +57,9 @@ class Exp_Main(Exp_Basic):
         total_loss = []
         self.model.eval()
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(vali_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(
+                    tqdm(vali_loader, desc='  Validating', leave=False,
+                         unit='batch', file=sys.stderr, dynamic_ncols=True)):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float()
 
@@ -123,13 +127,18 @@ class Exp_Main(Exp_Basic):
                                             epochs = self.args.train_epochs,
                                             max_lr = self.args.learning_rate)
 
-        for epoch in range(self.args.train_epochs):
+        epoch_bar = tqdm(range(self.args.train_epochs), desc='Training',
+                         unit='epoch', file=sys.stderr, dynamic_ncols=True)
+        for epoch in epoch_bar:
             iter_count = 0
             train_loss = []
 
             self.model.train()
             epoch_time = time.time()
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(train_loader):
+            batch_bar = tqdm(train_loader,
+                             desc=f'  Epoch {epoch + 1}/{self.args.train_epochs}',
+                             leave=False, unit='batch', file=sys.stderr, dynamic_ncols=True)
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(batch_bar):
                 iter_count += 1
                 model_optim.zero_grad()
                 batch_x = batch_x.float().to(self.device)
@@ -174,6 +183,7 @@ class Exp_Main(Exp_Basic):
                     loss = criterion(outputs, batch_y)
                     train_loss.append(loss.item())
 
+                batch_bar.set_postfix(loss=f'{loss.item():.4f}')
                 if (i + 1) % 100 == 0:
                     print("\titers: {0}, epoch: {1} | loss: {2:.7f}".format(i + 1, epoch + 1, loss.item()))
                     speed = (time.time() - time_now) / iter_count
@@ -202,7 +212,14 @@ class Exp_Main(Exp_Basic):
             print("Epoch: {0}, Steps: {1} | Train Loss: {2:.7f} Vali Loss: {3:.7f} Test Loss: {4:.7f}".format(
                 epoch + 1, train_steps, train_loss, vali_loss, test_loss))
             early_stopping(vali_loss, self.model, path)
+            epoch_bar.set_postfix(
+                train=f'{train_loss:.4f}',
+                vali=f'{vali_loss:.4f}',
+                test=f'{test_loss:.4f}',
+                patience=f'{early_stopping.counter}/{self.args.patience}',
+            )
             if early_stopping.early_stop:
+                epoch_bar.write('Early stopping triggered.')
                 print("Early stopping")
                 break
 
@@ -232,7 +249,9 @@ class Exp_Main(Exp_Basic):
 
         self.model.eval()
         with torch.no_grad():
-            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(test_loader):
+            for i, (batch_x, batch_y, batch_x_mark, batch_y_mark) in enumerate(
+                    tqdm(test_loader, desc='Testing', unit='batch',
+                         file=sys.stderr, dynamic_ncols=True)):
                 batch_x = batch_x.float().to(self.device)
                 batch_y = batch_y.float().to(self.device)
 
