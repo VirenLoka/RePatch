@@ -50,7 +50,7 @@ do
       --des 'Exp' \
       --train_epochs 100\
       --patience 20\
-      --itr 1 --batch_size 16 --learning_rate 0.0001 >logs/LongForecasting/$model_name'_'$model_id_name'_'$seq_len'_'$pred_len.log
+      --itr 50 --batch_size 64 --learning_rate 0.0001 >logs/LongForecasting/$model_name'_'$model_id_name'_'$seq_len'_'$pred_len.log
     echo "  Done  ->  logs/LongForecasting/${model_name}_${model_id_name}_${seq_len}_${pred_len}.log" >&2
 done
 echo "" >&2
