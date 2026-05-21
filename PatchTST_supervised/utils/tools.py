@@ -39,33 +39,53 @@ def adjust_learning_rate(optimizer, scheduler, epoch, args, printout=True):
 
 class EarlyStopping:
     def __init__(self, patience=7, verbose=False, delta=0):
-        self.patience = patience
-        self.verbose = verbose
-        self.counter = 0
-        self.best_score = None
-        self.early_stop = False
+        self.patience     = patience
+        self.verbose      = verbose
+        self.counter      = 0
+        self.best_score   = None
+        self.early_stop   = False
         self.val_loss_min = np.Inf
-        self.delta = delta
+        self.delta        = delta
+        # checkpoint tracking
+        self.best_epoch   = 0   # epoch (1-indexed) of the best checkpoint
+        self._epoch       = 0   # internal epoch counter
 
     def __call__(self, val_loss, model, path):
+        """Evaluate val_loss and save a checkpoint only when it improves.
+
+        Returns True if a checkpoint was written, False otherwise.
+        Only a single file (checkpoint.pth) is ever kept — it is
+        overwritten whenever val_loss beats the previous best.
+        """
+        self._epoch += 1
         score = -val_loss
+        saved = False
+
         if self.best_score is None:
             self.best_score = score
             self.save_checkpoint(val_loss, model, path)
+            self.best_epoch = self._epoch
+            saved = True
         elif score < self.best_score + self.delta:
             self.counter += 1
-            print(f'EarlyStopping counter: {self.counter} out of {self.patience}')
+            print(f'EarlyStopping: no improvement — counter {self.counter}/{self.patience}')
             if self.counter >= self.patience:
                 self.early_stop = True
         else:
             self.best_score = score
             self.save_checkpoint(val_loss, model, path)
-            self.counter = 0
+            self.best_epoch = self._epoch
+            self.counter    = 0
+            saved = True
+
+        return saved
 
     def save_checkpoint(self, val_loss, model, path):
+        """Overwrite the single checkpoint file only when val loss improves."""
         if self.verbose:
-            print(f'Validation loss decreased ({self.val_loss_min:.6f} --> {val_loss:.6f}).  Saving model ...')
-        torch.save(model.state_dict(), path + '/' + 'checkpoint.pth')
+            print(f'Checkpoint: val loss improved '
+                  f'({self.val_loss_min:.6f} → {val_loss:.6f})  — saving model.')
+        torch.save(model.state_dict(), path + '/checkpoint.pth')
         self.val_loss_min = val_loss
 
 
@@ -98,6 +118,22 @@ def visual(true, preds=None, name='./pic/test.pdf'):
         plt.plot(preds, label='Prediction', linewidth=2)
     plt.legend()
     plt.savefig(name, bbox_inches='tight')
+
+def count_parameters(model):
+    """Return (total_params, trainable_params) for a PyTorch model."""
+    total     = sum(p.numel() for p in model.parameters())
+    trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    return total, trainable
+
+
+def compute_gradient_norm(model):
+    """Return the global L2 norm across all parameter gradients (pre-clip)."""
+    total_norm = 0.0
+    for p in model.parameters():
+        if p.grad is not None:
+            total_norm += p.grad.data.norm(2).item() ** 2
+    return total_norm ** 0.5
+
 
 def test_params_flop(model,x_shape):
     """
