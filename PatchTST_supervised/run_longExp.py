@@ -6,6 +6,8 @@ from exp.exp_main import Exp_Main
 import random
 import numpy as np
 from tqdm import tqdm
+from pathlib import Path
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Autoformer & Transformer family for Time Series Forecasting')
@@ -28,7 +30,9 @@ if __name__ == '__main__':
     parser.add_argument('--target', type=str, default='OT', help='target feature in S or MS task')
     parser.add_argument('--freq', type=str, default='h',
                         help='freq for time features encoding, options:[s:secondly, t:minutely, h:hourly, d:daily, b:business days, w:weekly, m:monthly], you can also use more detailed freq like 15min or 3h')
-    parser.add_argument('--checkpoints', type=str, default='./drive/MyDrive/', help='location of model checkpoints')
+    ckpt_path = './drive/MyDrive/checkpoints/'
+    Path(ckpt_path).mkdir(parents=True, exist_ok=True)
+    parser.add_argument('--checkpoints', type=str, default=ckpt_path, help='location of model checkpoints')
 
     # forecasting task
     parser.add_argument('--seq_len', type=int, default=96, help='input sequence length')
