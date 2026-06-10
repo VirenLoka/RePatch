@@ -293,7 +293,7 @@ class Dataset_Custom(Dataset):
 class Dataset_ICICI(Dataset):
     def __init__(self, root_path, flag='train', size=None,
                  features='S', data_path='icici_3-years.csv',
-                 target='Close Price', scale=True, timeenc=0, freq='b'):
+                 target='returns', scale=True, timeenc=0, freq='b'):
         if size == None:
             self.seq_len = 60
             self.label_len = 30
@@ -325,6 +325,13 @@ class Dataset_ICICI(Dataset):
         df_raw['Deliverable Qty'] = (
             df_raw['Deliverable Qty'].astype(str).str.replace(',', '', regex=False).astype(float)
         )
+
+        # Log returns of the close price: r_t = ln(Close_t) - ln(Close_{t-1}).
+        # Preferred over simple returns in quant finance: they are time-additive
+        # (summable across days) and normalise large price swings.
+        df_raw['returns'] = np.log(df_raw['Close Price']).diff()
+        # First row has no previous close -> NaN; drop it so every row is valid.
+        df_raw = df_raw.iloc[1:].reset_index(drop=True)
 
         cols = list(df_raw.columns)
         cols.remove(self.target)

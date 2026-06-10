@@ -34,10 +34,10 @@ do
       --model $model_name \
       --data $data_name \
       --features MS \
-      --target 'Close Price' \
+      --target 'returns' \
       --seq_len $seq_len \
       --pred_len $pred_len \
-      --enc_in 12 \
+      --enc_in 13 \
       --e_layers 2 \
       --n_heads 4 \
       --d_model 64 \

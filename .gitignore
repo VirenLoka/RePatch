@@ -1,6 +1,8 @@
 # Created by https://www.toptal.com/developers/gitignore/api/emacs,jetbrains+all,jupyternotebooks,linux,macos,microsoftoffice,notepadpp,python,tortoisegit,vim,visualstudiocode,windows
 # Edit at https://www.toptal.com/developers/gitignore?templates=emacs,jetbrains+all,jupyternotebooks,linux,macos,microsoftoffice,notepadpp,python,tortoisegit,vim,visualstudiocode,windows
 
+
+test_note.ipynb
 ### Emacs ###
 # -*- mode: gitignore; -*-
 *~
@@ -28,6 +30,9 @@ tramp
 
 # reftex files
 *.rel
+
+#backup_colab config
+colab_icici.sh
 
 # AUCTeX auto folder
 /auto/
